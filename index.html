@@ -97,11 +97,20 @@
 
       <div class="card">
         <h2>Import</h2>
-        <textarea id="import" placeholder="Paste names, one per line — or CSV with a header row (Name, Title, Company, Notes). A LinkedIn connections export works too."></textarea>
+        <textarea id="import" placeholder="Paste names (one per line), a CSV, a LinkedIn export, contact cards (vCard) or a calendar invite (.ics)."></textarea>
         <div class="actions">
-          <button id="import-btn" class="primary">Add to this group</button>
+          <button id="file-btn">Import file…</button>
+          <button id="import-btn" class="primary">Add pasted text</button>
         </div>
+        <input id="file" type="file" accept=".vcf,.vcard,.ics,.csv,.tsv,.txt,text/vcard,text/x-vcard,text/calendar,text/csv,text/plain" class="hidden" />
         <div class="msg" id="import-msg"></div>
+        <details style="margin-top:8px">
+          <summary class="fine" style="cursor:pointer">Import contacts or a meeting invite</summary>
+          <p class="fine"><b>Meeting invite:</b> in the invitation email, save the attached <b>invite.ics</b> to Files, then tap “Import file…”. You get a group named after the meeting, with every attendee and the organizer.</p>
+          <p class="fine"><b>iPhone:</b> Contacts → open a contact (or a list) → Share Contact → Save to Files. Then tap “Import file…” and pick it.</p>
+          <p class="fine"><b>Android:</b> Contacts app → Fix &amp; manage → Export to file (.vcf). Or contacts.google.com → Export → Google CSV.</p>
+          <p class="fine">Only name, company, job title and notes are imported. Phone numbers, emails and addresses are ignored.</p>
+        </details>
       </div>
 
       <div class="actions" style="margin-bottom:14px"><button id="sample">Load sample groups</button></div>

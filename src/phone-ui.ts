@@ -1,6 +1,6 @@
 import {
-  clamp, current, move, newGroup, newPerson, parsePeople, sampleState, step, talkedCount, toggleTalked,
-  type Person, type State,
+  clamp, current, importAny, move, newGroup, newPerson, sampleState, step, talkedCount, toggleTalked,
+  type Group, type Person, type State,
 } from './people'
 
 export interface PhoneProps {
@@ -136,21 +136,71 @@ export function mountPhoneUi(props: PhoneProps) {
   })
 
   /* ---------- import ---------- */
-  $('import-btn').addEventListener('click', () => {
-    const box = $<HTMLTextAreaElement>('import')
-    const msg = $('import-msg')
-    const people = parsePeople(box.value)
+  const importMsg = $('import-msg')
+  const addPeople = (people: Person[], emptyHint: string): boolean => {
     if (people.length === 0) {
-      msg.textContent = 'Nothing to import: paste names or a CSV first.'
-      msg.className = 'msg err'
-      return
+      importMsg.textContent = emptyHint
+      importMsg.className = 'msg err'
+      return false
     }
     const base = s.groups[s.group] ? s : { ...s, groups: [newGroup('Imported')], group: 0, person: 0 }
     const groups = base.groups.map((x, i) => (i === base.group ? { ...x, people: [...x.people, ...people] } : x))
-    box.value = ''
-    msg.textContent = `Added ${people.length} ${people.length === 1 ? 'person' : 'people'}.`
-    msg.className = 'msg ok'
+    importMsg.textContent = `Added ${people.length} ${people.length === 1 ? 'person' : 'people'} to “${groups[base.group].name}”.`
+    importMsg.className = 'msg ok'
     void change({ ...base, groups })
+    return true
+  }
+
+  // Meeting invites become their own groups (one per event), shown right away.
+  const addGroups = (groups: Group[], emptyHint: string): boolean => {
+    if (groups.length === 0) {
+      importMsg.textContent = emptyHint
+      importMsg.className = 'msg err'
+      return false
+    }
+    const n = groups.reduce((a, g) => a + g.people.length, 0)
+    importMsg.textContent = `Added ${groups.length === 1 ? `“${groups[0].name}”` : `${groups.length} meetings`} with ${n} ${n === 1 ? 'person' : 'people'}.`
+    importMsg.className = 'msg ok'
+    void change({ ...s, groups: [...s.groups, ...groups], group: s.groups.length, person: 0 })
+    return true
+  }
+
+  const importFrom = (text: string, source: string): boolean => {
+    const r = importAny(text)
+    return r.kind === 'groups'
+      ? addGroups(r.groups, `No attendees found in ${source}.`)
+      : addPeople(r.people, `Nothing to import from ${source}.`)
+  }
+
+  $('import-btn').addEventListener('click', () => {
+    const box = $<HTMLTextAreaElement>('import')
+    if (!box.value.trim()) {
+      importMsg.textContent = 'Paste names, a CSV, contact cards or an invite first.'
+      importMsg.className = 'msg err'
+      return
+    }
+    if (importFrom(box.value, 'the pasted text')) box.value = ''
+  })
+
+  // Contacts file from the phone's Files app / Downloads (.vcf or .csv).
+  // Read locally with FileReader; nothing is uploaded anywhere.
+  const fileInput = $<HTMLInputElement>('file')
+  $('file-btn').addEventListener('click', () => fileInput.click())
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]
+    fileInput.value = ''
+    if (!file) return
+    if (file.size > 5_000_000) {
+      importMsg.textContent = 'That file is over 5 MB. Export just the contacts you need.'
+      importMsg.className = 'msg err'
+      return
+    }
+    try {
+      importFrom(await file.text(), file.name)
+    } catch {
+      importMsg.textContent = `Couldn't read ${file.name}.`
+      importMsg.className = 'msg err'
+    }
   })
 
   $('sample').addEventListener('click', () => {

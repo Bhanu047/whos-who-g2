@@ -1,5 +1,5 @@
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
-import { clamp, emptyState, newGroup, newPerson, sampleState, type State } from './people'
+import { clamp, emptyState, importAny, newGroup, newPerson, sampleState, type State } from './people'
 
 const KEY = 'whoswho.state.v1'
 
@@ -41,6 +41,20 @@ export async function save(bridge: EvenAppBridge | null, s: State): Promise<void
 function devState(): State | null {
   if (!import.meta.env.DEV || typeof location === 'undefined') return null
   const q = new URLSearchParams(location.search)
+  if (q.has('invite')) {
+    // A Google Calendar-style invite, run through the real importer.
+    const ics = [
+      'BEGIN:VCALENDAR', 'BEGIN:VEVENT', 'SUMMARY:Q1 planning – Acme', 'DTSTART:20261112T210000Z',
+      'ORGANIZER;CN=Maria Chen:mailto:maria.chen@acme.com',
+      'ATTENDEE;CN=Maria Chen:mailto:maria.chen@acme.com',
+      'ATTENDEE;CN=tom.becker@acme.com:mailto:tom.becker@acme.com',
+      'ATTENDEE;CN=Priya Nair:mailto:priya.nair@gmail.com',
+      'ATTENDEE;CUTYPE=ROOM;CN=Room 4B:mailto:room4b@acme.com',
+      'END:VEVENT', 'END:VCALENDAR',
+    ].join('\r\n')
+    const r = importAny(ics)
+    if (r.kind === 'groups') return clamp({ groups: r.groups, group: 0, person: Number(q.get('p')) || 0 })
+  }
   if (!q.has('sample')) return null
   const s = sampleState()
   s.group = Number(q.get('g')) || 0
