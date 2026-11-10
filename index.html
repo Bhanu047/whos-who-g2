@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+    <title>Who's Who</title>
+    <style>
+      :root { --bg:#232323; --card:#2c2c2c; --fg:#e5e5e5; --muted:#9a9a9a; --accent:#7ee787; --err:#ff7b72; --line:#3a3a3a; }
+      html, body { margin:0; min-height:100%; background:var(--bg); color:var(--fg);
+        font:15px/1.45 -apple-system, BlinkMacSystemFont, system-ui, sans-serif; -webkit-text-size-adjust:100%; overscroll-behavior:none; }
+      #app { padding:20px 16px 40px; max-width:520px; margin:0 auto; }
+      h1 { font-size:20px; font-weight:500; margin:0 0 4px; }
+      .note { color:var(--muted); font-size:13px; margin:0 0 16px; }
+      .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px; }
+      .card h2 { font-size:13px; font-weight:500; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin:0 0 10px; display:flex; justify-content:space-between; }
+      label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+      input, select, textarea { width:100%; box-sizing:border-box; background:#1b1b1b; color:var(--fg); border:1px solid var(--line);
+        border-radius:8px; padding:10px 12px; font:inherit; }
+      textarea { min-height:70px; resize:vertical; }
+      select { -webkit-appearance:none; appearance:none; padding-right:34px;
+        background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+        background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%; background-size:5px 5px; background-repeat:no-repeat; }
+      input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+      .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+      .actions { display:flex; gap:10px; margin-top:12px; }
+      button { flex:1; padding:11px; border-radius:8px; border:1px solid var(--line); background:#1b1b1b; color:var(--fg); font:inherit; }
+      button.primary { background:var(--accent); color:#0b2a10; border-color:var(--accent); font-weight:600; }
+      button.small { flex:0 0 auto; padding:6px 10px; font-size:13px; }
+      button.link { flex:0 0 auto; padding:0; border:0; background:none; color:var(--accent); font-size:13px; text-transform:none; letter-spacing:0; }
+      .hidden { display:none !important; }
+      #now { text-align:center; }
+      #now .name { font-size:30px; font-weight:700; color:var(--accent); line-height:1.15; }
+      #now .sub { color:var(--muted); font-size:14px; }
+      .person { display:flex; align-items:center; gap:8px; padding:9px 0; border-top:1px solid var(--line); }
+      .person:first-child { border-top:0; }
+      .person.on .meta b { color:var(--accent); }
+      .person .meta { flex:1; min-width:0; }
+      .person .meta b { display:block; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .person .meta span { color:var(--muted); font-size:13px; }
+      .tick { width:18px; color:var(--accent); flex:0 0 auto; text-align:center; }
+      .empty { color:var(--muted); font-size:14px; }
+      .msg { min-height:18px; margin-top:8px; font-size:13px; color:var(--muted); }
+      .msg.ok { color:var(--accent); } .msg.err { color:var(--err); }
+      .fine { color:var(--muted); font-size:12px; margin-top:8px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Who's Who</h1>
+      <p class="note" id="glasses-note"></p>
+
+      <div class="card">
+        <h2>On your glasses</h2>
+        <div id="now"></div>
+        <div class="actions">
+          <button id="prev">‹ Prev</button>
+          <button id="talked">✓ Talked</button>
+          <button id="next">Next ›</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Group <span><button class="link" id="rename-group">Rename</button> · <button class="link" id="delete-group">Delete</button></span></h2>
+        <select id="group"></select>
+        <div class="actions">
+          <button id="new-group">+ New group</button>
+          <button id="reset-talked">Clear ✓ marks</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>People <span class="fine" style="margin:0">order = swipe order</span></h2>
+        <div id="people"></div>
+        <div class="actions"><button id="add-person">+ Add person</button></div>
+      </div>
+
+      <div class="card hidden" id="editor">
+        <h2 id="editor-title">Add person</h2>
+        <label for="e-name">Name</label>
+        <input id="e-name" maxlength="40" placeholder="Maria Chen" />
+        <div class="row">
+          <div><label for="e-role">Role / relationship</label><input id="e-role" maxlength="40" placeholder="Product lead" /></div>
+          <div><label for="e-org">Company / where</label><input id="e-org" maxlength="40" placeholder="Acme Robotics" /></div>
+        </div>
+        <label for="e-met">Where you met</label>
+        <input id="e-met" maxlength="40" placeholder="CES 2025" />
+        <label for="e-ask">Ask about</label>
+        <input id="e-ask" maxlength="60" placeholder="her first marathon" />
+        <label for="e-notes">Notes (one per line)</label>
+        <textarea id="e-notes" placeholder="Kids: Leo (7)&#10;Pronounced MAR-ee-a"></textarea>
+        <div class="actions">
+          <button id="e-cancel">Cancel</button>
+          <button id="e-delete" class="hidden">Remove</button>
+          <button id="e-save" class="primary">Save</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Import</h2>
+        <textarea id="import" placeholder="Paste names, one per line — or CSV with a header row (Name, Title, Company, Notes). A LinkedIn connections export works too."></textarea>
+        <div class="actions">
+          <button id="import-btn" class="primary">Add to this group</button>
+        </div>
+        <div class="msg" id="import-msg"></div>
+      </div>
+
+      <div class="actions" style="margin-bottom:14px"><button id="sample">Load sample groups</button></div>
+
+      <p class="fine">Everything stays on this phone, in the Even app. Who's Who has no account, no server and no internet access.</p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

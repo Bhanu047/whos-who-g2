@@ -1,0 +1,21 @@
+{
+  "name": "whos-who-g2",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "build": "vite build",
+    "test": "rm -rf dist-test && tsc src/people.ts --outDir dist-test --target es2022 --module esnext --moduleResolution bundler --skipLibCheck && node --test test/*.test.mjs",
+    "simulate": "evenhub-simulator http://localhost:5173"
+  },
+  "dependencies": {
+    "@evenrealities/even_hub_sdk": "^0.0.10"
+  },
+  "devDependencies": {
+    "@evenrealities/evenhub-cli": "^0.1.12",
+    "@evenrealities/evenhub-simulator": "^0.7.2",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.0"
+  }
+}
